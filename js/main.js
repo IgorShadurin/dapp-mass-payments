@@ -3,7 +3,7 @@ function showCalculation() {
     addresses = addresses.value.trim().split("\n");
     var count = 0;
     addresses.forEach(function (v) {
-        if (v.trim() != "") {
+        if (v.trim()) {
             count++;
         }
     });
@@ -12,20 +12,66 @@ function showCalculation() {
         var element = document.getElementById("calculation");
         element.classList.remove("d-lg-none");
     } else {
-        alert('Please enter addresses list');
+        throw new Error('Please enter addresses list');
     }
+
+    return addresses;
 }
 
 function onCalculateDivideSum() {
-    showCalculation();
-    var sum = document.getElementById("divideSum");
+    try {
+        var sum = document.getElementById("divideSum").value;
+        if (!sum) {
+            alert('Sum can not be empty');
 
+            return;
+        }
+
+        var addresses = showCalculation();
+
+
+        var walletsDiv = document.getElementById('wallets');
+        walletsDiv.innerHTML = "";
+        var walletTemplateText = document.getElementById("wallet-template").innerHTML;
+        addresses.forEach(function (v, i, a) {
+            var id = 'wallet-' + i;
+            var labelId = id + '-label';
+            addElement('wallets', 'div', labelId, walletTemplateText.replaceAll('{id}', labelId).replaceAll('{label}', v).replaceAll('{value}', sum));
+        });
+    } catch (ex) {
+        alert(ex.message);
+    }
 }
 
 function onCalculateEachPayment() {
-    showCalculation();
-    var sum = document.getElementById("calculateEachPayment");
+    try {
+        var sum = document.getElementById("calculateEachPayment").value;
+        if (!sum) {
+            alert('Sum can not be empty');
 
+            return;
+        }
+
+        var addresses = showCalculation();
+
+        // todo create elements
+    } catch (ex) {
+        alert(ex.message);
+
+    }
+}
+
+String.prototype.replaceAll = function (search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+
+function addElement(parentId, elementTag, elementId, html) {
+    var p = document.getElementById(parentId);
+    var newElement = document.createElement(elementTag);
+    newElement.setAttribute('id', elementId);
+    newElement.innerHTML = html;
+    p.appendChild(newElement);
 }
 
 document.addEventListener('DOMContentLoaded', function () {

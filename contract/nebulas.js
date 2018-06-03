@@ -22,7 +22,7 @@ Game.prototype = {
 
     payToAll: function (addresses, amount) {
         addresses = JSON.parse(addresses);
-        if (!addresses || addresses.length == 0) {
+        if (!addresses || !addresses.length) {
             throw new Error("Empty addresses");
         }
 
