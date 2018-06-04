@@ -1,3 +1,12 @@
+var NebPay = require("nebpay");
+var nebPay = new NebPay();
+var nebulas = require("nebulas");
+var neb = new this.nebulas.Neb();
+// testnet
+//var contractAddress = "n1mQHZN3VNufwBjiAYmGKuZB3oBndaqPtQv";
+var contractAddress = "n1jBkQRaSmHD2b1E8A7z9E9Ar8v59HqBxMY";
+
+
 function showCalculation() {
     var addresses = document.getElementById("addresses");
     addresses = addresses.value.trim().split("\n");
@@ -28,15 +37,18 @@ function onCalculateDivideSum() {
         }
 
         var addresses = showCalculation();
-
-
         var walletsDiv = document.getElementById('wallets');
         walletsDiv.innerHTML = "";
         var walletTemplateText = document.getElementById("wallet-template").innerHTML;
+        var resultSum = sum / addresses.length;
+        var depositBalanceButton = document.querySelector('#depositBalance');
+        var massSendBalanceButton = document.querySelector('#massSendBalance');
+        depositBalanceButton.dataset.sum = sum;
+        massSendBalanceButton.dataset.addresses = JSON.stringify(addresses);
         addresses.forEach(function (v, i, a) {
             var id = 'wallet-' + i;
             var labelId = id + '-label';
-            addElement('wallets', 'div', labelId, walletTemplateText.replaceAll('{id}', labelId).replaceAll('{label}', v).replaceAll('{value}', sum));
+            addElement('wallets', 'div', labelId, walletTemplateText.replaceAll('{id}', labelId).replaceAll('{label}', v).replaceAll('{value}', resultSum));
         });
     } catch (ex) {
         alert(ex.message);
@@ -61,6 +73,41 @@ function onCalculateEachPayment() {
     }
 }
 
+function onDeposit() {
+    var depositBalanceButton = document.querySelector('#depositBalance');
+    var sum = depositBalanceButton.dataset.sum;
+    //console.log(sum);
+    nebPay.call(contractAddress, sum, "deposit", null, {
+        listener: function (r) {
+            // todo
+            //r.txhash
+            //console.log(r);
+            alert('Your transaction is ' + r.txhash + '. Wait when mining complete (30-60 seconds) and press Pay to all')
+        }
+    });
+}
+
+function onMassSend() {
+    var massSendBalanceButton = document.querySelector('#massSendBalance');
+    var addresses = massSendBalanceButton.dataset.addresses;
+    var depositBalanceButton = document.querySelector('#depositBalance');
+    var sum = depositBalanceButton.dataset.sum.toString();
+    //console.log(typeof(sum));
+    sum = neb.toBasic(sum, 'nas').dividedBy(JSON.parse(addresses).length).toFixed(0).toString();
+    //console.log(sum);
+    var params = [
+        addresses,
+        sum
+    ];
+    nebPay.call(contractAddress, 0, "payToAll", JSON.stringify(params), {
+        listener: function (r) {
+            // todo
+            console.log(r);
+            alert('Now your transaction in mining: ' + r.txhash);
+        }
+    });
+}
+
 String.prototype.replaceAll = function (search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
@@ -79,7 +126,9 @@ document.addEventListener('DOMContentLoaded', function () {
         alert("Extension wallet is not installed, please install it first.")
     }
 
-    calculateDivideSum.onclick = onCalculateDivideSum;
-    calculateEachPayment.onclick = onCalculateEachPayment;
+    document.querySelector('#calculateDivideSum').onclick = onCalculateDivideSum;
+    //document.querySelector('#calculateEachPayment').onclick = onCalculateEachPayment;
+    document.querySelector('#depositBalance').onclick = onDeposit;
+    document.querySelector('#massSendBalance').onclick = onMassSend;
 });
 
